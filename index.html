@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CACH Alumni — Journée de Retrouvailles 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #E8C97A;
+    --dark: #0D1B2A;
+    --dark-mid: #1A2E45;
+    --cream: #F5F0E8;
+    --cream-dark: #EDE5D0;
+    --text: #2C2C2C;
+    --red: #8B1A1A;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background-color: var(--dark);
+    color: var(--cream);
+    font-family: 'Lato', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, var(--dark) 0%, var(--dark-mid) 100%);
+    border-bottom: 1px solid rgba(201,168,76,0.3);
+    padding: 50px 20px 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  header::before {
+    content: '';
+    position: absolute;
+    top: -80px; left: 50%;
+    transform: translateX(-50%);
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .header-ornament {
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 16px;
+    font-weight: 700;
+  }
+
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    color: var(--gold-light);
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+
+  header h2 {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: clamp(1.2rem, 3vw, 1.8rem);
+    color: var(--cream);
+    font-weight: 400;
+    margin-bottom: 30px;
+  }
+
+  .event-details {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+
+  .event-detail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .event-detail .label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 700;
+  }
+
+  .event-detail .value {
+    font-size: 15px;
+    color: var(--cream);
+    font-weight: 300;
+  }
+
+  .divider {
+    width: 80px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 30px auto;
+  }
+
+  /* FORM CONTAINER */
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+
+  .fee-banner {
+    background: linear-gradient(135deg, var(--red), #6B1111);
+    border: 1px solid rgba(201,168,76,0.4);
+    border-radius: 4px;
+    padding: 18px 24px;
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .fee-banner .fee-label {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold-light);
+    margin-bottom: 4px;
+  }
+
+  .fee-banner .fee-amount {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    color: var(--cream);
+    font-weight: 700;
+  }
+
+  .fee-banner .fee-note {
+    font-size: 12px;
+    color: rgba(245,240,232,0.7);
+    margin-top: 4px;
+  }
+
+  /* LANGUAGE TOGGLE */
+  .lang-toggle {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-bottom: 30px;
+  }
+
+  .lang-btn {
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    padding: 6px 16px;
+    font-family: 'Lato', sans-serif;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .lang-btn.active {
+    background: var(--gold);
+    color: var(--dark);
+    font-weight: 700;
+  }
+
+  /* FORM FIELDS */
+  .form-section {
+    margin-bottom: 36px;
+  }
+
+  .section-title {
+    font-size: 10px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 700;
+    margin-bottom: 20px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(201,168,76,0.2);
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 540px) {
+    .form-row { grid-template-columns: 1fr; }
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .form-group label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold-light);
+    font-weight: 700;
+  }
+
+  .form-group label .sublabel {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    text-transform: none;
+    font-weight: 300;
+    color: rgba(245,240,232,0.55);
+    margin-top: 2px;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(201,168,76,0.3);
+    color: var(--cream);
+    padding: 13px 16px;
+    font-family: 'Lato', sans-serif;
+    font-size: 15px;
+    font-weight: 300;
+    border-radius: 2px;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+    width: 100%;
+  }
+
+  .form-group select option {
+    background: var(--dark-mid);
+    color: var(--cream);
+  }
+
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    border-color: var(--gold);
+    background: rgba(201,168,76,0.07);
+  }
+
+  .form-group input::placeholder,
+  .form-group textarea::placeholder {
+    color: rgba(245,240,232,0.25);
+  }
+
+  /* PARTICIPANTS TABLE */
+  .participants-grid {
+    display: grid;
+    gap: 12px;
+  }
+
+  .participant-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .participant-num {
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .participant-row input {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(201,168,76,0.3);
+    color: var(--cream);
+    padding: 11px 14px;
+    font-family: 'Lato', sans-serif;
+    font-size: 14px;
+    font-weight: 300;
+    border-radius: 2px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+
+  .participant-row input:focus {
+    border-color: var(--gold);
+  }
+
+  .participant-row input::placeholder { color: rgba(245,240,232,0.25); }
+
+  .add-btn {
+    background: transparent;
+    border: 1px dashed rgba(201,168,76,0.4);
+    color: var(--gold);
+    padding: 11px;
+    cursor: pointer;
+    font-size: 18px;
+    border-radius: 2px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+  }
+
+  .add-btn:hover { border-color: var(--gold); background: rgba(201,168,76,0.1); }
+
+  .remove-btn {
+    background: transparent;
+    border: 1px solid rgba(139,26,26,0.4);
+    color: rgba(220,100,100,0.7);
+    padding: 11px;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 2px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+  }
+
+  .remove-btn:hover { border-color: var(--red); color: #e05555; background: rgba(139,26,26,0.1); }
+
+  /* TSHIRT SIZES */
+  .tshirt-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+  }
+
+  @media (max-width: 480px) {
+    .tshirt-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  .tshirt-option input[type="radio"] { display: none; }
+
+  .tshirt-option label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 48px;
+    border: 1px solid rgba(201,168,76,0.3);
+    color: rgba(245,240,232,0.6);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 2px;
+    text-transform: none;
+  }
+
+  .tshirt-option input[type="radio"]:checked + label {
+    background: var(--gold);
+    color: var(--dark);
+    border-color: var(--gold);
+  }
+
+  .tshirt-option label:hover {
+    border-color: var(--gold-light);
+    color: var(--gold-light);
+  }
+
+  /* SUBMIT */
+  .submit-section {
+    text-align: center;
+    margin-top: 50px;
+  }
+
+  .submit-btn {
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    border: none;
+    color: var(--dark);
+    padding: 18px 60px;
+    font-family: 'Lato', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s;
+    border-radius: 2px;
+    min-width: 260px;
+  }
+
+  .submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(201,168,76,0.35);
+  }
+
+  .submit-note {
+    font-size: 12px;
+    color: rgba(245,240,232,0.4);
+    margin-top: 16px;
+    font-style: italic;
+  }
+
+  /* SUCCESS MESSAGE */
+  .success-msg {
+    display: none;
+    background: rgba(0,100,0,0.2);
+    border: 1px solid rgba(100,200,100,0.4);
+    border-radius: 4px;
+    padding: 30px;
+    text-align: center;
+    margin-top: 40px;
+  }
+
+  .success-msg.show { display: block; }
+
+  .success-msg h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    color: var(--gold-light);
+    margin-bottom: 10px;
+  }
+
+  .success-msg p { color: var(--cream); font-weight: 300; line-height: 1.6; }
+
+  footer {
+    text-align: center;
+    padding: 30px 20px;
+    border-top: 1px solid rgba(201,168,76,0.15);
+    font-size: 12px;
+    color: rgba(245,240,232,0.35);
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-ornament">✦ Club des Alumni du Collège Adventiste du Cap-Haïtien ✦</div>
+  <h1>Journée de Retrouvailles</h1>
+  <h2>Alumni Reunion Day</h2>
+  <div class="divider"></div>
+  <div class="event-details">
+    <div class="event-detail">
+      <span class="label">Date</span>
+      <span class="value">Samedi / Saturday — 5 Septembre / September 5, 2026</span>
+    </div>
+    <div class="event-detail">
+      <span class="label">Lieu / Venue</span>
+      <span class="value">9600 Royal Palm Blvd, Coral Springs, FL 33065</span>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="lang-toggle">
+    <button class="lang-btn active" onclick="setLang('fr')">Français</button>
+    <button class="lang-btn" onclick="setLang('en')">English</button>
+  </div>
+
+  <div class="fee-banner">
+    <div class="fee-label" id="fee-label">Frais d'inscription / Registration Fee</div>
+    <div class="fee-amount">$50.00 USD</div>
+    <div class="fee-note" id="fee-note">Par alumni — les accompagnateurs peuvent avoir des frais supplémentaires</div>
+  </div>
+
+  <form id="registrationForm" onsubmit="handleSubmit(event)">
+
+    <!-- PERSONAL INFO -->
+    <div class="form-section">
+      <div class="section-title" id="sec-personal">Informations Personnelles / Personal Information</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="firstName" id="lbl-firstName">Prénom <span class="sublabel">First Name</span></label>
+          <input type="text" id="firstName" name="firstName" placeholder="Jean" required>
+        </div>
+        <div class="form-group">
+          <label for="lastName" id="lbl-lastName">Nom de famille <span class="sublabel">Last Name</span></label>
+          <input type="text" id="lastName" name="lastName" placeholder="Pierre" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="email" id="lbl-email">Courriel <span class="sublabel">Email Address</span></label>
+          <input type="email" id="email" name="email" placeholder="jean.pierre@email.com" required>
+        </div>
+        <div class="form-group">
+          <label for="phone" id="lbl-phone">Téléphone <span class="sublabel">Phone Number</span></label>
+          <input type="tel" id="phone" name="phone" placeholder="+1 (954) 000-0000">
+        </div>
+      </div>
+    </div>
+
+    <!-- PROMOTION -->
+    <div class="form-section">
+      <div class="section-title" id="sec-promo">Promotion / Graduating Year</div>
+      <div class="form-group">
+        <label for="promotion" id="lbl-promotion">Année de diplôme au C.A.C.H. <span class="sublabel">Year you graduated from C.A.C.H.</span></label>
+        <select id="promotion" name="promotion" required>
+          <option value="" disabled selected id="opt-promo-default">— Sélectionnez votre promotion / Select your graduating year —</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- T-SHIRT -->
+    <div class="form-section">
+      <div class="section-title" id="sec-tshirt">Taille de T-Shirt / T-Shirt Size</div>
+      <div class="form-group">
+        <label id="lbl-tshirt">Choisissez votre taille <span class="sublabel">Choose your size</span></label>
+        <div class="tshirt-grid">
+          <div class="tshirt-option"><input type="radio" name="tshirt" id="xs" value="XS" required><label for="xs">XS</label></div>
+          <div class="tshirt-option"><input type="radio" name="tshirt" id="sm" value="S"><label for="sm">S</label></div>
+          <div class="tshirt-option"><input type="radio" name="tshirt" id="md" value="M"><label for="md">M</label></div>
+          <div class="tshirt-option"><input type="radio" name="tshirt" id="lg" value="L"><label for="lg">L</label></div>
+          <div class="tshirt-option"><input type="radio" name="tshirt" id="xl" value="XL"><label for="xl">XL</label></div>
+          <div class="tshirt-option"><input type="radio" name="tshirt" id="xxl" value="XXL"><label for="xxl">XXL</label></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PARTICIPANTS -->
+    <div class="form-section">
+      <div class="section-title" id="sec-guests">Accompagnateurs / Guests</div>
+      <div class="form-group">
+        <label id="lbl-guests">Noms des participants vous accompagnant <span class="sublabel">Names of guests coming with you (family, friends)</span></label>
+        <div class="participants-grid" id="participantsGrid">
+          <div class="participant-row" id="p-row-1">
+            <div class="participant-num">1</div>
+            <input type="text" name="participant_1" placeholder="Nom complet / Full name" id="p-input-1">
+            <button type="button" class="add-btn" onclick="addParticipant()" title="Ajouter / Add">+</button>
+          </div>
+        </div>
+        <div style="margin-top:10px; font-size:12px; color:rgba(245,240,232,0.4); font-style:italic;" id="lbl-guests-note">
+          Laissez vide si vous venez seul(e). / Leave blank if attending alone.
+        </div>
+      </div>
+    </div>
+
+    <!-- COMMENTS -->
+    <div class="form-section">
+      <div class="section-title" id="sec-notes">Notes / Commentaires</div>
+      <div class="form-group">
+        <label for="notes" id="lbl-notes">Restrictions alimentaires, besoins spéciaux, etc. <span class="sublabel">Dietary restrictions, special needs, etc.</span></label>
+        <textarea id="notes" name="notes" rows="3" placeholder="Optionnel / Optional..."></textarea>
+      </div>
+    </div>
+
+    <div class="submit-section">
+      <button type="submit" class="submit-btn" id="btn-submit">S'inscrire maintenant</button>
+      <div class="submit-note" id="submit-note">En soumettant ce formulaire, vous confirmez votre participation.<br>By submitting this form, you confirm your attendance.</div>
+    </div>
+
+  </form>
+
+  <div class="success-msg" id="successMsg">
+    <h3 id="success-title">Inscription Enregistrée! / Registration Received!</h3>
+    <p id="success-body">Merci de vous être inscrit(e) à la Journée de Retrouvailles 2026.<br>Thank you for registering for the Alumni Reunion Day 2026.<br><br>
+    Vous recevrez une confirmation par courriel sous peu.<br>You will receive a confirmation email shortly.</p>
+  </div>
+
+</div>
+
+<footer>
+  © 2026 Club des Alumni du Collège Adventiste du Cap-Haïtien (C.A.C.H.) &nbsp;·&nbsp; Coral Springs, FL
+</footer>
+
+<script>
+// Populate year dropdown
+const sel = document.getElementById('promotion');
+for (let y = 2025; y >= 1960; y--) {
+  const opt = document.createElement('option');
+  opt.value = y;
+  opt.textContent = y;
+  sel.appendChild(opt);
+}
+
+// Language toggle
+let currentLang = 'fr';
+const translations = {
+  fr: {
+    'fee-label': 'Frais d\'inscription / Registration Fee',
+    'fee-note': 'Par alumni — les accompagnateurs peuvent avoir des frais supplémentaires',
+    'sec-personal': 'Informations Personnelles / Personal Information',
+    'lbl-firstName': 'Prénom <span class="sublabel">First Name</span>',
+    'lbl-lastName': 'Nom de famille <span class="sublabel">Last Name</span>',
+    'lbl-email': 'Courriel <span class="sublabel">Email Address</span>',
+    'lbl-phone': 'Téléphone <span class="sublabel">Phone Number</span>',
+    'sec-promo': 'Promotion / Graduating Year',
+    'lbl-promotion': 'Année de diplôme au C.A.C.H. <span class="sublabel">Year you graduated from C.A.C.H.</span>',
+    'opt-promo-default': '— Sélectionnez votre promotion / Select your graduating year —',
+    'sec-tshirt': 'Taille de T-Shirt / T-Shirt Size',
+    'lbl-tshirt': 'Choisissez votre taille <span class="sublabel">Choose your size</span>',
+    'sec-guests': 'Accompagnateurs / Guests',
+    'lbl-guests': 'Noms des participants vous accompagnant <span class="sublabel">Names of guests coming with you (family, friends)</span>',
+    'lbl-guests-note': 'Laissez vide si vous venez seul(e). / Leave blank if attending alone.',
+    'sec-notes': 'Notes / Commentaires',
+    'lbl-notes': 'Restrictions alimentaires, besoins spéciaux, etc. <span class="sublabel">Dietary restrictions, special needs, etc.</span>',
+    'btn-submit': 'S\'inscrire maintenant',
+    'submit-note': 'En soumettant ce formulaire, vous confirmez votre participation.<br>By submitting this form, you confirm your attendance.',
+    'success-title': 'Inscription Enregistrée! / Registration Received!',
+    'success-body': 'Merci de vous être inscrit(e) à la Journée de Retrouvailles 2026.<br>Thank you for registering for the Alumni Reunion Day 2026.<br><br>Vous recevrez une confirmation par courriel sous peu.<br>You will receive a confirmation email shortly.',
+  },
+  en: {
+    'fee-label': 'Registration Fee / Frais d\'inscription',
+    'fee-note': 'Per alumni — guests may have additional fees',
+    'sec-personal': 'Personal Information / Informations Personnelles',
+    'lbl-firstName': 'First Name <span class="sublabel">Prénom</span>',
+    'lbl-lastName': 'Last Name <span class="sublabel">Nom de famille</span>',
+    'lbl-email': 'Email Address <span class="sublabel">Courriel</span>',
+    'lbl-phone': 'Phone Number <span class="sublabel">Téléphone</span>',
+    'sec-promo': 'Graduating Year / Promotion',
+    'lbl-promotion': 'Year you graduated from C.A.C.H. <span class="sublabel">Année de diplôme</span>',
+    'opt-promo-default': '— Select your graduating year / Sélectionnez votre promotion —',
+    'sec-tshirt': 'T-Shirt Size / Taille de T-Shirt',
+    'lbl-tshirt': 'Choose your size <span class="sublabel">Choisissez votre taille</span>',
+    'sec-guests': 'Guests / Accompagnateurs',
+    'lbl-guests': 'Names of guests coming with you (family, friends) <span class="sublabel">Noms des participants vous accompagnant</span>',
+    'lbl-guests-note': 'Leave blank if attending alone. / Laissez vide si vous venez seul(e).',
+    'sec-notes': 'Notes / Comments',
+    'lbl-notes': 'Dietary restrictions, special needs, etc. <span class="sublabel">Restrictions alimentaires, besoins spéciaux</span>',
+    'btn-submit': 'Register Now',
+    'submit-note': 'By submitting this form, you confirm your attendance.<br>En soumettant ce formulaire, vous confirmez votre participation.',
+    'success-title': 'Registration Received! / Inscription Enregistrée!',
+    'success-body': 'Thank you for registering for the Alumni Reunion Day 2026.<br>Merci de vous être inscrit(e) à la Journée de Retrouvailles 2026.<br><br>You will receive a confirmation email shortly.<br>Vous recevrez une confirmation par courriel sous peu.',
+  }
+};
+
+function setLang(lang) {
+  currentLang = lang;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase().includes(lang === 'fr' ? 'fr' : 'en')));
+  const t = translations[lang];
+  for (const [id, html] of Object.entries(t)) {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = html;
+  }
+  // Update participant placeholders
+  document.querySelectorAll('[name^="participant_"]').forEach(inp => {
+    inp.placeholder = lang === 'fr' ? 'Nom complet / Full name' : 'Full name / Nom complet';
+  });
+}
+
+// Participants
+let participantCount = 1;
+function addParticipant() {
+  const grid = document.getElementById('participantsGrid');
+  // Remove existing add button and replace last row's button with remove
+  const lastRow = document.getElementById(`p-row-${participantCount}`);
+  const oldAddBtn = lastRow.querySelector('.add-btn');
+  if (oldAddBtn) {
+    oldAddBtn.outerHTML = `<button type="button" class="remove-btn" onclick="removeParticipant(${participantCount})" title="Supprimer / Remove">−</button>`;
+  }
+  participantCount++;
+  const row = document.createElement('div');
+  row.className = 'participant-row';
+  row.id = `p-row-${participantCount}`;
+  row.innerHTML = `
+    <div class="participant-num">${participantCount}</div>
+    <input type="text" name="participant_${participantCount}" placeholder="${currentLang === 'fr' ? 'Nom complet / Full name' : 'Full name / Nom complet'}" id="p-input-${participantCount}">
+    <button type="button" class="add-btn" onclick="addParticipant()" title="Ajouter / Add">+</button>
+  `;
+  grid.appendChild(row);
+}
+
+function removeParticipant(num) {
+  const row = document.getElementById(`p-row-${num}`);
+  if (row) row.remove();
+}
+
+function handleSubmit(e) {
+  e.preventDefault();
+  document.getElementById('registrationForm').style.display = 'none';
+  document.getElementById('successMsg').classList.add('show');
+  window.scrollTo({ top: document.getElementById('successMsg').offsetTop - 100, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
