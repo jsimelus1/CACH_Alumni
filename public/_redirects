@@ -1,8 +1,0 @@
-# Netlify Redirects
-# Proxies all /api/* requests to your Render backend.
-# This means index.html can use API_BASE = '/api' on both Netlify and Render.
-# The browser only ever sees your Netlify domain — no CORS issues.
-#
-# IMPORTANT: Replace the URL below with your actual Render service URL.
-
-/api/*  https://pollspace.onrender.com/api/:splat  200
