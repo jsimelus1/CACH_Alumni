@@ -1,45 +1,35 @@
 // PollSpace - server.js
-// Render PostgreSQL + Web Service
-// Frontend: GitHub Pages or Netlify
+// Serves BOTH the frontend (index.html) and the API from the same origin.
+// This eliminates all CORS issues since there is no cross-origin request.
+//
+// File structure expected on Render:
+//   server.js
+//   package.json
+//   public/
+//     index.html
+//
+// Environment variables to set in Render dashboard:
+//   DATABASE_URL  -> your Render Internal Database URL (auto-linked)
+//   PORT          -> set automatically by Render, do not touch
 
 const express = require('express');
 const { Pool } = require('pg');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// -----------------------------------------------------------------
-// CORS - set manually on every response so no browser can block it.
-// The cors npm package has edge cases with some CDN/proxy setups.
-// This approach works universally with GitHub Pages + Render.
-// -----------------------------------------------------------------
-app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
-  res.setHeader('Access-Control-Max-Age', '86400'); // cache preflight 24h
-
-  // Respond immediately to OPTIONS preflight — do not pass to routes
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(204);
-  }
-
-  next();
-});
-
+// Serve static frontend files from the /public folder
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
-// -----------------------------------------------------------------
-// DATABASE
-// -----------------------------------------------------------------
+// Database
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
 });
 
-// -----------------------------------------------------------------
-// AUTO SCHEMA
-// -----------------------------------------------------------------
+// Auto-create tables on first boot
 async function initSchema() {
   const client = await pool.connect();
   try {
@@ -76,16 +66,11 @@ async function initSchema() {
   }
 }
 
-// -----------------------------------------------------------------
-// HELPER
-// -----------------------------------------------------------------
+// Helper: fetch one poll with options + vote counts
 async function queryPollById(id) {
   const { rows } = await pool.query(`
     SELECT
-      p.id,
-      p.question,
-      p.description,
-      p.created_at,
+      p.id, p.question, p.description, p.created_at,
       COALESCE(
         json_agg(
           json_build_object(
@@ -105,21 +90,8 @@ async function queryPollById(id) {
   return rows[0] || null;
 }
 
-// -----------------------------------------------------------------
-// ROUTES
-// -----------------------------------------------------------------
+// ── API ROUTES ────────────────────────────────────────────────
 
-// Root - confirms service is up when you open the Render URL
-app.get('/', (req, res) => {
-  res.json({
-    name: 'PollSpace API',
-    status: 'running',
-    health: '/api/health',
-    polls: '/api/polls',
-  });
-});
-
-// Health check - ping from UptimeRobot every 5 min to prevent sleep
 app.get('/api/health', async (req, res) => {
   try {
     await pool.query('SELECT 1');
@@ -129,15 +101,11 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// GET /api/polls
 app.get('/api/polls', async (req, res) => {
   try {
     const { rows } = await pool.query(`
       SELECT
-        p.id,
-        p.question,
-        p.description,
-        p.created_at,
+        p.id, p.question, p.description, p.created_at,
         COALESCE(
           json_agg(
             json_build_object(
@@ -161,7 +129,6 @@ app.get('/api/polls', async (req, res) => {
   }
 });
 
-// GET /api/polls/:id
 app.get('/api/polls/:id', async (req, res) => {
   try {
     const poll = await queryPollById(req.params.id);
@@ -173,10 +140,8 @@ app.get('/api/polls/:id', async (req, res) => {
   }
 });
 
-// POST /api/polls
 app.post('/api/polls', async (req, res) => {
   const { question, description = '', options } = req.body;
-
   if (!question || !question.trim())
     return res.status(400).json({ error: 'Question is required' });
   if (!Array.isArray(options) || options.length < 2)
@@ -185,25 +150,20 @@ app.post('/api/polls', async (req, res) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-
     const { rows: [poll] } = await client.query(
-      `INSERT INTO polls (question, description)
-       VALUES ($1, $2)
+      `INSERT INTO polls (question, description) VALUES ($1, $2)
        RETURNING id, question, description, created_at`,
       [question.trim(), description.trim()]
     );
-
     const insertedOptions = [];
     for (const text of options) {
       const { rows: [opt] } = await client.query(
-        `INSERT INTO poll_options (poll_id, option_text)
-         VALUES ($1, $2)
+        `INSERT INTO poll_options (poll_id, option_text) VALUES ($1, $2)
          RETURNING id, option_text`,
         [poll.id, text.trim()]
       );
       insertedOptions.push({ ...opt, vote_count: 0 });
     }
-
     await client.query('COMMIT');
     res.status(201).json({ ...poll, options: insertedOptions });
   } catch (e) {
@@ -215,18 +175,14 @@ app.post('/api/polls', async (req, res) => {
   }
 });
 
-// POST /api/polls/:id/vote
 app.post('/api/polls/:id/vote', async (req, res) => {
   const { option_id } = req.body;
   const voter_ip = (
     (req.headers['x-forwarded-for'] || '').split(',')[0].trim() ||
-    req.socket.remoteAddress ||
-    'unknown'
+    req.socket.remoteAddress || 'unknown'
   );
-
   if (!option_id)
     return res.status(400).json({ error: 'option_id is required' });
-
   try {
     const dup = await pool.query(
       `SELECT id FROM poll_votes WHERE poll_id = $1 AND voter_ip = $2`,
@@ -234,12 +190,10 @@ app.post('/api/polls/:id/vote', async (req, res) => {
     );
     if (dup.rows.length)
       return res.status(409).json({ error: 'You have already voted on this poll' });
-
     await pool.query(
       `INSERT INTO poll_votes (poll_id, option_id, voter_ip) VALUES ($1, $2, $3)`,
       [req.params.id, option_id, voter_ip]
     );
-
     res.json({ success: true });
   } catch (e) {
     console.error('POST /vote:', e.message);
@@ -247,12 +201,10 @@ app.post('/api/polls/:id/vote', async (req, res) => {
   }
 });
 
-// DELETE /api/polls/:id
 app.delete('/api/polls/:id', async (req, res) => {
   try {
     const result = await pool.query(
-      `DELETE FROM polls WHERE id = $1 RETURNING id`,
-      [req.params.id]
+      `DELETE FROM polls WHERE id = $1 RETURNING id`, [req.params.id]
     );
     if (!result.rows.length)
       return res.status(404).json({ error: 'Poll not found' });
@@ -263,14 +215,15 @@ app.delete('/api/polls/:id', async (req, res) => {
   }
 });
 
-// -----------------------------------------------------------------
-// START
-// -----------------------------------------------------------------
+// Catch-all: serve index.html for any non-API route
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Start
 initSchema()
   .then(() => {
-    app.listen(PORT, () => {
-      console.log('PollSpace running on port ' + PORT);
-    });
+    app.listen(PORT, () => console.log('PollSpace running on port ' + PORT));
   })
   .catch(err => {
     console.error('Startup failed:', err.message);
