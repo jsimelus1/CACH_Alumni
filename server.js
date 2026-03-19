@@ -1,35 +1,25 @@
 // PollSpace - server.js
-// Serves BOTH the frontend (index.html) and the API from the same origin.
-// This eliminates all CORS issues since there is no cross-origin request.
-//
-// File structure expected on Render:
-//   server.js
-//   package.json
-//   public/
-//     index.html
-//
-// Environment variables to set in Render dashboard:
-//   DATABASE_URL  -> your Render Internal Database URL (auto-linked)
-//   PORT          -> set automatically by Render, do not touch
+// Serves frontend from /public and API from /api
+// Same-origin setup eliminates all CORS issues
 
 const express = require('express');
 const { Pool } = require('pg');
-const path = require('path');
+const path    = require('path');
 
-const app = express();
+const app  = express();
 const PORT = process.env.PORT || 3001;
 
-// Serve static frontend files from the /public folder
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
-// Database
+// ── Database ──────────────────────────────────────────────────
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
 });
 
-// Auto-create tables on first boot
+// ── Schema init ───────────────────────────────────────────────
+// Each table created in its own query so errors are isolated
 async function initSchema() {
   const client = await pool.connect();
   try {
@@ -41,6 +31,8 @@ async function initSchema() {
         created_at  TIMESTAMPTZ DEFAULT NOW()
       )
     `);
+    console.log('polls table ready');
+
     await client.query(`
       CREATE TABLE IF NOT EXISTS poll_options (
         id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -48,6 +40,8 @@ async function initSchema() {
         option_text TEXT NOT NULL
       )
     `);
+    console.log('poll_options table ready');
+
     await client.query(`
       CREATE TABLE IF NOT EXISTS poll_votes (
         id        UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -57,91 +51,91 @@ async function initSchema() {
         voted_at  TIMESTAMPTZ DEFAULT NOW()
       )
     `);
-    console.log('Database schema ready');
+    console.log('poll_votes table ready');
+
   } catch (err) {
-    console.error('Schema init failed:', err.message);
+    console.error('Schema init error:', err.message);
     throw err;
   } finally {
     client.release();
   }
 }
 
-// Helper: fetch one poll with options + vote counts
-async function queryPollById(id) {
-  const { rows } = await pool.query(`
-    SELECT
-      p.id, p.question, p.description, p.created_at,
-      COALESCE(
-        json_agg(
-          json_build_object(
-            'id',          po.id,
-            'option_text', po.option_text,
-            'vote_count',  COUNT(pv.id)
-          ) ORDER BY po.id
-        ) FILTER (WHERE po.id IS NOT NULL),
-        '[]'::json
-      ) AS options
-    FROM polls p
-    LEFT JOIN poll_options po ON po.poll_id = p.id
-    LEFT JOIN poll_votes   pv ON pv.option_id = po.id
-    WHERE p.id = $1
-    GROUP BY p.id
-  `, [id]);
-  return rows[0] || null;
+// ── Helpers ───────────────────────────────────────────────────
+
+// Build poll object from separate queries — avoids json_agg complexity
+async function buildPoll(pollRow) {
+  const { rows: options } = await pool.query(
+    `SELECT
+       po.id,
+       po.option_text,
+       COUNT(pv.id)::int AS vote_count
+     FROM poll_options po
+     LEFT JOIN poll_votes pv ON pv.option_id = po.id
+     WHERE po.poll_id = $1
+     GROUP BY po.id
+     ORDER BY po.id`,
+    [pollRow.id]
+  );
+  return {
+    id:          pollRow.id,
+    question:    pollRow.question,
+    description: pollRow.description,
+    created_at:  pollRow.created_at,
+    options,
+  };
 }
 
-// ── API ROUTES ────────────────────────────────────────────────
+// ── Routes ────────────────────────────────────────────────────
 
+// Health check — ping from UptimeRobot every 5 min to prevent sleep
 app.get('/api/health', async (req, res) => {
   try {
     await pool.query('SELECT 1');
     res.json({ status: 'ok', db: 'connected' });
   } catch (e) {
+    console.error('Health check failed:', e.message);
     res.status(503).json({ status: 'error', message: e.message });
   }
 });
 
+// GET /api/polls
 app.get('/api/polls', async (req, res) => {
   try {
-    const { rows } = await pool.query(`
-      SELECT
-        p.id, p.question, p.description, p.created_at,
-        COALESCE(
-          json_agg(
-            json_build_object(
-              'id',          po.id,
-              'option_text', po.option_text,
-              'vote_count',  COUNT(pv.id)
-            ) ORDER BY po.id
-          ) FILTER (WHERE po.id IS NOT NULL),
-          '[]'::json
-        ) AS options
-      FROM polls p
-      LEFT JOIN poll_options po ON po.poll_id = p.id
-      LEFT JOIN poll_votes   pv ON pv.option_id = po.id
-      GROUP BY p.id
-      ORDER BY p.created_at DESC
-    `);
-    res.json(rows);
+    const { rows: pollRows } = await pool.query(
+      `SELECT id, question, description, created_at
+       FROM polls
+       ORDER BY created_at DESC`
+    );
+    const polls = await Promise.all(pollRows.map(buildPoll));
+    res.json(polls);
   } catch (e) {
-    console.error('GET /polls:', e.message);
+    console.error('GET /api/polls error:', e.message);
     res.status(500).json({ error: e.message });
   }
 });
 
+// GET /api/polls/:id
 app.get('/api/polls/:id', async (req, res) => {
   try {
-    const poll = await queryPollById(req.params.id);
-    if (!poll) return res.status(404).json({ error: 'Poll not found' });
+    const { rows } = await pool.query(
+      `SELECT id, question, description, created_at
+       FROM polls WHERE id = $1`,
+      [req.params.id]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Poll not found' });
+    const poll = await buildPoll(rows[0]);
     res.json(poll);
   } catch (e) {
-    console.error('GET /polls/:id:', e.message);
+    console.error('GET /api/polls/:id error:', e.message);
     res.status(500).json({ error: e.message });
   }
 });
 
+// POST /api/polls
 app.post('/api/polls', async (req, res) => {
   const { question, description = '', options } = req.body;
+
   if (!question || !question.trim())
     return res.status(400).json({ error: 'Question is required' });
   if (!Array.isArray(options) || options.length < 2)
@@ -150,39 +144,48 @@ app.post('/api/polls', async (req, res) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+
     const { rows: [poll] } = await client.query(
-      `INSERT INTO polls (question, description) VALUES ($1, $2)
+      `INSERT INTO polls (question, description)
+       VALUES ($1, $2)
        RETURNING id, question, description, created_at`,
       [question.trim(), description.trim()]
     );
+
     const insertedOptions = [];
     for (const text of options) {
       const { rows: [opt] } = await client.query(
-        `INSERT INTO poll_options (poll_id, option_text) VALUES ($1, $2)
+        `INSERT INTO poll_options (poll_id, option_text)
+         VALUES ($1, $2)
          RETURNING id, option_text`,
         [poll.id, text.trim()]
       );
       insertedOptions.push({ ...opt, vote_count: 0 });
     }
+
     await client.query('COMMIT');
     res.status(201).json({ ...poll, options: insertedOptions });
   } catch (e) {
     await client.query('ROLLBACK');
-    console.error('POST /polls:', e.message);
+    console.error('POST /api/polls error:', e.message);
     res.status(500).json({ error: e.message });
   } finally {
     client.release();
   }
 });
 
+// POST /api/polls/:id/vote
 app.post('/api/polls/:id/vote', async (req, res) => {
   const { option_id } = req.body;
   const voter_ip = (
     (req.headers['x-forwarded-for'] || '').split(',')[0].trim() ||
-    req.socket.remoteAddress || 'unknown'
+    req.socket.remoteAddress ||
+    'unknown'
   );
+
   if (!option_id)
     return res.status(400).json({ error: 'option_id is required' });
+
   try {
     const dup = await pool.query(
       `SELECT id FROM poll_votes WHERE poll_id = $1 AND voter_ip = $2`,
@@ -190,27 +193,30 @@ app.post('/api/polls/:id/vote', async (req, res) => {
     );
     if (dup.rows.length)
       return res.status(409).json({ error: 'You have already voted on this poll' });
+
     await pool.query(
       `INSERT INTO poll_votes (poll_id, option_id, voter_ip) VALUES ($1, $2, $3)`,
       [req.params.id, option_id, voter_ip]
     );
     res.json({ success: true });
   } catch (e) {
-    console.error('POST /vote:', e.message);
+    console.error('POST /api/vote error:', e.message);
     res.status(500).json({ error: e.message });
   }
 });
 
+// DELETE /api/polls/:id
 app.delete('/api/polls/:id', async (req, res) => {
   try {
     const result = await pool.query(
-      `DELETE FROM polls WHERE id = $1 RETURNING id`, [req.params.id]
+      `DELETE FROM polls WHERE id = $1 RETURNING id`,
+      [req.params.id]
     );
     if (!result.rows.length)
       return res.status(404).json({ error: 'Poll not found' });
     res.json({ success: true, deleted: req.params.id });
   } catch (e) {
-    console.error('DELETE /polls:', e.message);
+    console.error('DELETE /api/polls error:', e.message);
     res.status(500).json({ error: e.message });
   }
 });
@@ -220,10 +226,12 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Start
+// ── Start ─────────────────────────────────────────────────────
 initSchema()
   .then(() => {
-    app.listen(PORT, () => console.log('PollSpace running on port ' + PORT));
+    app.listen(PORT, () => {
+      console.log('PollSpace running on port ' + PORT);
+    });
   })
   .catch(err => {
     console.error('Startup failed:', err.message);
